@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ordenar Ropa - Drag and Drop</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="lienzo" width="800" height="600"></canvas>
+    <br>
+    <button onclick="agregarRopa('Pantalón')">Agregar Pantalón</button>
+    <button onclick="agregarRopa('Chompa')">Agregar Chompa</button>
+    <button onclick="agregarRopa('Polo')">Agregar Polo</button>
+    <button onclick="agregarRopa('Medias')">Agregar Medias</button>
+    <button onclick="agregarRopa('Calzoncillo')">Agregar Calzoncillo</button>
+    <button onclick="agregarRopa('Short')">Agregar Short</button>
+    <button onclick="agregarRopa('Gorra')">Agregar Gorra</button>
+    <script>
+        const canvas = document.getElementById('lienzo');
+        const ctx = canvas.getContext('2d');
+
+        const coloresPorTipo = {
+            'Pantalón': 'blue',
+            'Chompa': 'red',
+            'Polo': 'green',
+            'Medias': 'gray',
+            'Calzoncillo': 'white',
+            'Short': 'yellow',
+            'Gorra': 'purple'
+        };
+
+        const contadorPorTipo = {
+            'Pantalón': 0,
+            'Chompa': 0,
+            'Polo': 0,
+            'Medias': 0,
+            'Calzoncillo': 0,
+            'Short': 0,
+            'Gorra': 0
+        };
+
+        const prendas = [];
+
+        const tamañoPrenda = 80;
+        let prendaArrastrada = null;
+
+        function dibujarPrenda(prenda) {
+            ctx.fillStyle = prenda.color;
+            const tamaño = prenda.doblada ? tamañoPrenda / 2 : tamañoPrenda;
+            ctx.fillRect(prenda.x, prenda.y, tamaño, tamaño);
+            if (prenda.doblada) {
+                ctx.strokeStyle = 'black';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(prenda.x, prenda.y, tamaño, tamaño);
+            }
+            
+            // Dibujar el nombre y número de la prenda
+            ctx.fillStyle = 'black';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${prenda.nombre} #${prenda.numero}`, prenda.x + tamaño / 2, prenda.y - 5);
+        }
+
+        function dibujar() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            prendas.forEach(dibujarPrenda);
+        }
+
+        function agregarRopa(tipo) {
+            contadorPorTipo[tipo]++;
+            const nuevaPrenda = {
+                x: Math.random() * (canvas.width - tamañoPrenda),
+                y: Math.random() * (canvas.height - tamañoPrenda),
+                color: coloresPorTipo[tipo],
+                nombre: tipo,
+                numero: contadorPorTipo[tipo],
+                doblada: false
+            };
+            prendas.push(nuevaPrenda);
+            dibujar();
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            for (let i = prendas.length - 1; i >= 0; i--) {
+                const prenda = prendas[i];
+                const tamaño = prenda.doblada ? tamañoPrenda / 2 : tamañoPrenda;
+                if (x > prenda.x && x < prenda.x + tamaño &&
+                    y > prenda.y && y < prenda.y + tamaño) {
+                    prendaArrastrada = prenda;
+                    // Mover la prenda arrastrada al final del array para que se dibuje encima
+                    prendas.splice(i, 1);
+                    prendas.push(prendaArrastrada);
+                    break;
+                }
+            }
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (prendaArrastrada) {
+                const rect = canvas.getBoundingClientRect();
+                prendaArrastrada.x = e.clientX - rect.left - tamañoPrenda / 2;
+                prendaArrastrada.y = e.clientY - rect.top - tamañoPrenda / 2;
+                dibujar();
+            }
+        });
+
+        canvas.addEventListener('mouseup', () => {
+            prendaArrastrada = null;
+        });
+
+        canvas.addEventListener('dblclick', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            prendas.forEach((prenda) => {
+                const tamaño = prenda.doblada ? tamañoPrenda / 2 : tamañoPrenda;
+                if (x > prenda.x && x < prenda.x + tamaño &&
+                    y > prenda.y && y < prenda.y + tamaño) {
+                    prenda.doblada = !prenda.doblada;
+                    dibujar();
+                }
+            });
+        });
+
+        dibujar();
+    </script>
+</body>
+</html>
